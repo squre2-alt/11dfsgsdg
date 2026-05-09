@@ -164,7 +164,7 @@ final class SubnetScanner: ObservableObject {
     }
 
     private static func fetchTitle(host: String, ports: [Int]) async -> String? {
-        let sortedPorts = ports.sorted { portPriority($0) < portPriority($1) }
+        let sortedPorts = ports.sorted { SubnetScanResult.portPriority($0) < SubnetScanResult.portPriority($1) }
         for port in sortedPorts {
             let scheme = port == 443 ? "https" : "http"
             guard let url = URL(string: "\(scheme)://\(host):\(port)/") else { continue }
