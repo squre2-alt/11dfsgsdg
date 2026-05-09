@@ -116,10 +116,9 @@
 			};
 			buildConfigurationList = 111111111111111111111700 /* Build configuration list for PBXProject "GateLAN" */;
 			compatibilityVersion = "Xcode 14.0";
-			developmentRegion = zh-Hans;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				zh-Hans,
 				en,
 				Base,
 			);
