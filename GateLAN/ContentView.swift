@@ -2,38 +2,18 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var store: DeviceStore
-    @EnvironmentObject private var localNetworkProbe: LocalNetworkPermissionProbe
     @StateObject private var discovery = DiscoveryService()
     @StateObject private var subnetScanner = SubnetScanner()
 
     @State private var showingAdd = false
     @State private var editingDevice: BarrierDevice?
     @State private var checkingIDs: Set<UUID> = []
-    @State private var showingPermissionHint = false
     @State private var subnetPrefix = "192.168.1"
     @State private var detectedSubnetText = "尚未识别当前 Wi-Fi 网段"
 
     var body: some View {
         NavigationSplitView {
             List {
-                Section {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Button {
-                            localNetworkProbe.request()
-                            showingPermissionHint = true
-                        } label: {
-                            Label("请求本地网络权限", systemImage: "lock.shield")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.borderedProminent)
-
-                        Text(localNetworkProbe.statusText)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.vertical, 4)
-                }
-
                 Section {
                     Button {
                         showingAdd = true
@@ -47,15 +27,8 @@ struct ContentView: View {
                         Label(discovery.isScanning ? "停止发现" : "发现局域网服务", systemImage: "dot.radiowaves.left.and.right")
                     }
 
-                    HStack {
-                        Text(discovery.statusText)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        if discovery.isScanning {
-                            Spacer()
-                            ProgressView()
-                        }
-                    }
+                    StatusLine(text: discovery.statusText, isActive: discovery.isScanning)
+
                     if let error = discovery.errorMessage {
                         Text(error)
                             .font(.caption)
@@ -95,16 +68,20 @@ struct ContentView: View {
                     }
 
                     ForEach(subnetScanner.results) { result in
-                        Button {
-                            add(result)
+                        let device = device(from: result)
+                        NavigationLink {
+                            WebAdminView(device: device)
                         } label: {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(result.host)
-                                    .font(.headline)
-                                Text("开放端口：\(result.openPorts.map(String.init).joined(separator: ", "))")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                            ScanResultRow(
+                                title: result.host,
+                                subtitle: "开放端口：\(result.openPorts.map(String.init).joined(separator: ", "))"
+                            )
+                        }
+                        .swipeActions {
+                            Button("保存") {
+                                store.add(device, credential: nil)
                             }
+                            .tint(.green)
                         }
                     }
                 }
@@ -112,17 +89,18 @@ struct ContentView: View {
                 if !discovery.services.isEmpty {
                     Section("Bonjour/mDNS 发现") {
                         ForEach(discovery.services) { service in
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(service.name)
-                                    .font(.headline)
-                                Text(service.endpointDescription)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(2)
+                            let device = device(from: service)
+                            NavigationLink {
+                                WebAdminView(device: device)
+                            } label: {
+                                ScanResultRow(
+                                    title: service.name,
+                                    subtitle: service.endpointDescription
+                                )
                             }
                             .swipeActions {
-                                Button("添加") {
-                                    add(service)
+                                Button("保存") {
+                                    store.add(device, credential: nil)
                                 }
                                 .tint(.green)
                             }
@@ -132,7 +110,7 @@ struct ContentView: View {
 
                 Section("我的设备") {
                     if store.devices.isEmpty {
-                        EmptyStateView(title: "暂无设备", systemImage: "rectangle.connected.to.line.below", message: "添加你已授权管理的道闸后台。")
+                        EmptyStateView(title: "暂无设备", systemImage: "rectangle.connected.to.line.below", message: "保存常用后台后会显示在这里。")
                     } else {
                         ForEach(store.devices) { device in
                             NavigationLink(value: device) {
@@ -168,21 +146,15 @@ struct ContentView: View {
                 DeviceEditorView(existing: device)
             }
             .onAppear {
-                localNetworkProbe.request()
                 detectSubnet()
             }
-            .alert("已请求本地网络权限", isPresented: $showingPermissionHint) {
-                Button("知道了", role: .cancel) { }
-            } message: {
-                Text("已尝试 Bonjour、mDNS、UDP 广播和常见网关连接。如果系统没有弹窗，请打开 iPhone 设置 -> 隐私与安全性 -> 本地网络，查看“道闸管家”是否已出现。")
-            }
         } detail: {
-            EmptyStateView(title: "选择一个设备", systemImage: "rectangle.connected.to.line.below", message: "从左侧列表打开设备后台。")
+            EmptyStateView(title: "选择一个设备", systemImage: "rectangle.connected.to.line.below", message: "扫描或选择设备后打开后台。")
         }
     }
 
-    private func add(_ service: DiscoveredService) {
-        let device = BarrierDevice(
+    private func device(from service: DiscoveredService) -> BarrierDevice {
+        BarrierDevice(
             name: service.name,
             brandID: "custom",
             host: service.name.replacingOccurrences(of: " ", with: "-") + ".local",
@@ -191,12 +163,11 @@ struct ContentView: View {
             path: "/",
             note: "来自 Bonjour/mDNS 发现：\(service.endpointDescription)"
         )
-        store.add(device, credential: nil)
     }
 
-    private func add(_ result: SubnetScanResult) {
+    private func device(from result: SubnetScanResult) -> BarrierDevice {
         let preferredPort = result.openPorts.first ?? 80
-        let device = BarrierDevice(
+        return BarrierDevice(
             name: "局域网设备 \(result.host)",
             brandID: "custom",
             host: result.host,
@@ -205,7 +176,6 @@ struct ContentView: View {
             path: "/",
             note: "来自 IP 网段扫描，开放端口：\(result.openPorts.map(String.init).joined(separator: ", "))"
         )
-        store.add(device, credential: nil)
     }
 
     private func detectSubnet() {
@@ -225,6 +195,39 @@ struct ContentView: View {
                 store.mark(device.id, online: online)
                 checkingIDs.remove(device.id)
             }
+        }
+    }
+}
+
+struct StatusLine: View {
+    let text: String
+    let isActive: Bool
+
+    var body: some View {
+        HStack {
+            Text(text)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            if isActive {
+                Spacer()
+                ProgressView()
+            }
+        }
+    }
+}
+
+struct ScanResultRow: View {
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.headline)
+            Text(subtitle)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
         }
     }
 }
