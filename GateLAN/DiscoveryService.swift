@@ -29,8 +29,8 @@ final class DiscoveryService: ObservableObject {
         let browser = NWBrowser(for: descriptor, using: .tcp)
 
         browser.stateUpdateHandler = { [weak self] state in
-            Task { @MainActor in
-                guard let self else { return }
+            DispatchQueue.main.async {
+                guard let self = self else { return }
                 switch state {
                 case .failed(let error):
                     self.errorMessage = error.localizedDescription
@@ -46,8 +46,8 @@ final class DiscoveryService: ObservableObject {
         }
 
         browser.browseResultsChangedHandler = { [weak self] results, _ in
-            Task { @MainActor in
-                guard let self else { return }
+            DispatchQueue.main.async {
+                guard let self = self else { return }
                 let mapped = results.map { result in
                     let name = Self.serviceName(from: result.endpoint)
                     return DiscoveredService(

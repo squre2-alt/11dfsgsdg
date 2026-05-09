@@ -159,7 +159,7 @@ struct DeviceRow: View {
         switch device.isOnline {
         case true: return "checkmark.circle.fill"
         case false: return "xmark.circle.fill"
-        case nil: return "questionmark.circle"
+        default: return "questionmark.circle"
         }
     }
 
@@ -168,7 +168,7 @@ struct DeviceRow: View {
         switch device.isOnline {
         case true: return .green
         case false: return .red
-        case nil: return .secondary
+        default: return .secondary
         }
     }
 }
