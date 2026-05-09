@@ -34,6 +34,7 @@
 		111111111111111111111010 /* BrandCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandCatalog.swift; sourceTree = "<group>"; };
 		111111111111111111111011 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		111111111111111111111012 /* LocalNetworkPermissionProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNetworkPermissionProbe.swift; sourceTree = "<group>"; };
+		111111111111111111111013 /* GateLAN.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GateLAN.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -69,6 +70,7 @@
 				111111111111111111111006 /* DiscoveryService.swift */,
 				111111111111111111111007 /* ConnectivityChecker.swift */,
 				111111111111111111111012 /* LocalNetworkPermissionProbe.swift */,
+				111111111111111111111013 /* GateLAN.entitlements */,
 				111111111111111111111011 /* Info.plist */,
 			);
 			path = GateLAN;
@@ -286,6 +288,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = GateLAN/GateLAN.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
@@ -308,6 +311,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = GateLAN/GateLAN.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;

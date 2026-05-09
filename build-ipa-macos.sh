@@ -18,6 +18,8 @@ xcodebuild \
   CODE_SIGN_IDENTITY="" \
   build
 
+codesign -f -s - --entitlements GateLAN/GateLAN.entitlements "$APP_PATH"
+
 rm -rf "$BUILD_DIR/Payload" "$IPA_PATH"
 mkdir -p "$BUILD_DIR/Payload"
 cp -R "$APP_PATH" "$BUILD_DIR/Payload/"
