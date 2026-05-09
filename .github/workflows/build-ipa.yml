@@ -24,6 +24,11 @@ jobs:
           chmod +x build-ipa-macos.sh
           ./build-ipa-macos.sh
 
+      - name: Show build output on failure
+        if: failure()
+        run: |
+          find build -maxdepth 5 -type f | sort || true
+
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
