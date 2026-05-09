@@ -8,17 +8,30 @@ struct ContentView: View {
     @State private var showingAdd = false
     @State private var editingDevice: BarrierDevice?
     @State private var checkingIDs: Set<UUID> = []
+    @State private var showingPermissionHint = false
 
     var body: some View {
         NavigationSplitView {
             List {
                 Section {
-                    Button {
-                        localNetworkProbe.request()
-                    } label: {
-                        Label("请求本地网络权限", systemImage: "lock.shield")
-                    }
+                    VStack(alignment: .leading, spacing: 10) {
+                        Button {
+                            localNetworkProbe.request()
+                            showingPermissionHint = true
+                        } label: {
+                            Label("请求本地网络权限", systemImage: "lock.shield")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
 
+                        Text(localNetworkProbe.statusText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 4)
+                }
+
+                Section {
                     Button {
                         showingAdd = true
                     } label: {
@@ -92,6 +105,11 @@ struct ContentView: View {
             }
             .onAppear {
                 localNetworkProbe.request()
+            }
+            .alert("已请求本地网络权限", isPresented: $showingPermissionHint) {
+                Button("知道了", role: .cancel) { }
+            } message: {
+                Text("如果系统没有弹窗，请打开 iPhone 设置 -> 隐私与安全性 -> 本地网络，查看“道闸管家”是否已出现。")
             }
         } detail: {
             EmptyStateView(title: "选择一个设备", systemImage: "rectangle.connected.to.line.below", message: "从左侧列表打开设备后台。")
