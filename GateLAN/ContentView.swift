@@ -73,13 +73,13 @@ struct ContentView: View {
                             WebAdminView(device: device)
                         } label: {
                             ScanResultRow(
-                                title: result.host,
-                                subtitle: "开放端口：\(result.openPorts.map(String.init).joined(separator: ", "))"
+                                title: result.displayName,
+                                subtitle: "\(result.host) · 开放端口：\(result.openPorts.map(String.init).joined(separator: ", "))"
                             )
                         }
                         .swipeActions {
                             Button("保存") {
-                                store.add(device, credential: nil)
+                                save(device)
                             }
                             .tint(.green)
                         }
@@ -100,7 +100,7 @@ struct ContentView: View {
                             }
                             .swipeActions {
                                 Button("保存") {
-                                    store.add(device, credential: nil)
+                                    save(device)
                                 }
                                 .tint(.green)
                             }
@@ -110,7 +110,7 @@ struct ContentView: View {
 
                 Section("我的设备") {
                     if store.devices.isEmpty {
-                        EmptyStateView(title: "暂无设备", systemImage: "rectangle.connected.to.line.below", message: "保存常用后台后会显示在这里。")
+                        EmptyStateView(title: "暂无设备", systemImage: "rectangle.connected.to.line.below", message: "确认是常用后台后再保存到这里。")
                     } else {
                         ForEach(store.devices) { device in
                             NavigationLink(value: device) {
@@ -166,16 +166,22 @@ struct ContentView: View {
     }
 
     private func device(from result: SubnetScanResult) -> BarrierDevice {
-        let preferredPort = result.openPorts.first ?? 80
-        return BarrierDevice(
-            name: "局域网设备 \(result.host)",
+        BarrierDevice(
+            name: result.displayName,
             brandID: "custom",
             host: result.host,
-            port: preferredPort,
-            scheme: preferredPort == 443 ? "https" : "http",
+            port: result.preferredPort,
+            scheme: result.preferredScheme,
             path: "/",
             note: "来自 IP 网段扫描，开放端口：\(result.openPorts.map(String.init).joined(separator: ", "))"
         )
+    }
+
+    private func save(_ device: BarrierDevice) {
+        guard !store.devices.contains(where: { $0.host == device.host && $0.port == device.port && $0.scheme == device.scheme }) else {
+            return
+        }
+        store.add(device, credential: nil)
     }
 
     private func detectSubnet() {
