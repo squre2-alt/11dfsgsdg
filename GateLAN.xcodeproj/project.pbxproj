@@ -17,6 +17,7 @@
 		111111111111111111111108 /* WebAdminView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111111111111111111111008 /* WebAdminView.swift */; };
 		111111111111111111111109 /* DeviceEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111111111111111111111009 /* DeviceEditorView.swift */; };
 		111111111111111111111110 /* BrandCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111111111111111111111010 /* BrandCatalog.swift */; };
+		111111111111111111111111 /* LocalNetworkPermissionProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111111111111111111111012 /* LocalNetworkPermissionProbe.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +33,7 @@
 		111111111111111111111009 /* DeviceEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceEditorView.swift; sourceTree = "<group>"; };
 		111111111111111111111010 /* BrandCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandCatalog.swift; sourceTree = "<group>"; };
 		111111111111111111111011 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		111111111111111111111012 /* LocalNetworkPermissionProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNetworkPermissionProbe.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,6 +68,7 @@
 				111111111111111111111005 /* KeychainStore.swift */,
 				111111111111111111111006 /* DiscoveryService.swift */,
 				111111111111111111111007 /* ConnectivityChecker.swift */,
+				111111111111111111111012 /* LocalNetworkPermissionProbe.swift */,
 				111111111111111111111011 /* Info.plist */,
 			);
 			path = GateLAN;
@@ -157,6 +160,7 @@
 				111111111111111111111108 /* WebAdminView.swift in Sources */,
 				111111111111111111111109 /* DeviceEditorView.swift in Sources */,
 				111111111111111111111110 /* BrandCatalog.swift in Sources */,
+				111111111111111111111111 /* LocalNetworkPermissionProbe.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

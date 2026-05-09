@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var store: DeviceStore
+    @EnvironmentObject private var localNetworkProbe: LocalNetworkPermissionProbe
     @StateObject private var discovery = DiscoveryService()
 
     @State private var showingAdd = false
@@ -82,6 +83,9 @@ struct ContentView: View {
             }
             .sheet(item: $editingDevice) { device in
                 DeviceEditorView(existing: device)
+            }
+            .onAppear {
+                localNetworkProbe.request()
             }
         } detail: {
             EmptyStateView(title: "选择一个设备", systemImage: "rectangle.connected.to.line.below", message: "从左侧列表打开设备后台。")

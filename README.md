@@ -15,6 +15,7 @@
 - 选择常见道闸/安防品牌模板，仅填充名称、端口、路径
 - 使用 iOS Keychain 保存你自己录入的授权凭据
 - 使用 Bonjour/mDNS 发现局域网内公开广播的 HTTP/HTTPS 服务
+- 启动时主动触发 iOS 本地网络权限请求
 - TCP 在线检测
 - WKWebView 打开设备后台
 
