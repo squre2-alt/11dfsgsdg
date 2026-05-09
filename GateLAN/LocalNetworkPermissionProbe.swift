@@ -8,16 +8,20 @@ final class LocalNetworkPermissionProbe: ObservableObject {
     private var browser: NWBrowser?
     private var multicastConnection: NWConnection?
     private var broadcastConnection: NWConnection?
+    private var gatewayConnections: [NWConnection] = []
 
     func request() {
         statusText = "正在请求本地网络权限..."
         browser?.cancel()
         multicastConnection?.cancel()
         broadcastConnection?.cancel()
+        gatewayConnections.forEach { $0.cancel() }
+        gatewayConnections = []
 
         startBonjourBrowse()
         sendMulticastProbe()
         sendBroadcastProbe()
+        connectToCommonGateways()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             self.statusText = "已发送请求。如果系统弹窗出现，请选择允许。"
@@ -85,5 +89,38 @@ final class LocalNetworkPermissionProbe: ObservableObject {
         }
 
         connection.start(queue: .global(qos: .userInitiated))
+    }
+
+    private func connectToCommonGateways() {
+        let gatewayHosts = [
+            "192.168.1.1",
+            "192.168.0.1",
+            "192.168.31.1",
+            "10.0.0.1",
+            "172.16.0.1"
+        ]
+
+        gatewayConnections = gatewayHosts.map { host in
+            let connection = NWConnection(
+                host: NWEndpoint.Host(host),
+                port: NWEndpoint.Port(integerLiteral: 80),
+                using: .tcp
+            )
+
+            connection.stateUpdateHandler = { [weak self, weak connection] state in
+                switch state {
+                case .ready, .failed, .cancelled:
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        connection?.cancel()
+                        self?.gatewayConnections.removeAll { $0 === connection }
+                    }
+                default:
+                    break
+                }
+            }
+
+            connection.start(queue: .global(qos: .userInitiated))
+            return connection
+        }
     }
 }

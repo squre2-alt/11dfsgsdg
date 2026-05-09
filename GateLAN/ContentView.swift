@@ -109,7 +109,7 @@ struct ContentView: View {
             .alert("已请求本地网络权限", isPresented: $showingPermissionHint) {
                 Button("知道了", role: .cancel) { }
             } message: {
-                Text("如果系统没有弹窗，请打开 iPhone 设置 -> 隐私与安全性 -> 本地网络，查看“道闸管家”是否已出现。")
+                Text("已尝试 Bonjour、mDNS、UDP 广播和常见网关连接。如果系统没有弹窗，请打开 iPhone 设置 -> 隐私与安全性 -> 本地网络，查看“道闸管家”是否已出现。")
             }
         } detail: {
             EmptyStateView(title: "选择一个设备", systemImage: "rectangle.connected.to.line.below", message: "从左侧列表打开设备后台。")
