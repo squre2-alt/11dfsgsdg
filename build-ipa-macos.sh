@@ -12,7 +12,6 @@ xcodebuild \
   -target "$TARGET" \
   -configuration "$CONFIGURATION" \
   -sdk iphoneos \
-  -destination 'generic/platform=iOS' \
   -derivedDataPath "$BUILD_DIR" \
   CODE_SIGNING_ALLOWED=NO \
   CODE_SIGNING_REQUIRED=NO \
