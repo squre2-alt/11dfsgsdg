@@ -1,15 +1,15 @@
 #!/bin/sh
 set -eu
 
-TARGET="GateLAN"
+SCHEME="GateLAN"
 CONFIGURATION="Release"
 BUILD_DIR="$(pwd)/build"
-APP_PATH="$BUILD_DIR/Build/Products/$CONFIGURATION-iphoneos/$TARGET.app"
+APP_PATH="$BUILD_DIR/Build/Products/$CONFIGURATION-iphoneos/$SCHEME.app"
 IPA_PATH="$(pwd)/GateLAN.ipa"
 
 xcodebuild \
   -project GateLAN.xcodeproj \
-  -target "$TARGET" \
+  -scheme "$SCHEME" \
   -configuration "$CONFIGURATION" \
   -sdk iphoneos \
   -derivedDataPath "$BUILD_DIR" \
