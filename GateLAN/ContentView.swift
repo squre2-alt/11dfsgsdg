@@ -1,0 +1,231 @@
+import SwiftUI
+
+struct ContentView: View {
+    @EnvironmentObject private var store: DeviceStore
+    @StateObject private var discovery = DiscoveryService()
+
+    @State private var showingAdd = false
+    @State private var editingDevice: BarrierDevice?
+    @State private var checkingIDs: Set<UUID> = []
+
+    var body: some View {
+        NavigationSplitView {
+            List {
+                Section {
+                    Button {
+                        showingAdd = true
+                    } label: {
+                        Label("手动添加设备", systemImage: "plus.circle.fill")
+                    }
+
+                    Button {
+                        discovery.isScanning ? discovery.stop() : discovery.start()
+                    } label: {
+                        Label(discovery.isScanning ? "停止发现" : "发现局域网服务", systemImage: "dot.radiowaves.left.and.right")
+                    }
+                }
+
+                if !discovery.services.isEmpty {
+                    Section("Bonjour/mDNS 发现") {
+                        ForEach(discovery.services) { service in
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(service.name)
+                                    .font(.headline)
+                                Text(service.endpointDescription)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(2)
+                            }
+                            .swipeActions {
+                                Button("添加") {
+                                    add(service)
+                                }
+                                .tint(.green)
+                            }
+                        }
+                    }
+                }
+
+                Section("我的设备") {
+                    if store.devices.isEmpty {
+                        EmptyStateView(title: "暂无设备", systemImage: "rectangle.connected.to.line.below", message: "添加你已授权管理的道闸后台。")
+                    } else {
+                        ForEach(store.devices) { device in
+                            NavigationLink(value: device) {
+                                DeviceRow(device: device, isChecking: checkingIDs.contains(device.id))
+                            }
+                            .swipeActions(edge: .leading) {
+                                Button("检测") {
+                                    check(device)
+                                }
+                                .tint(.blue)
+                            }
+                            .swipeActions {
+                                Button("编辑") {
+                                    editingDevice = device
+                                }
+                                .tint(.orange)
+                            }
+                        }
+                        .onDelete(perform: store.delete)
+                    }
+                }
+            }
+            .navigationTitle("道闸管家")
+            .navigationDestination(for: BarrierDevice.self) { device in
+                DeviceDetailView(device: device, isChecking: checkingIDs.contains(device.id)) {
+                    check(device)
+                }
+            }
+            .sheet(isPresented: $showingAdd) {
+                DeviceEditorView(existing: nil)
+            }
+            .sheet(item: $editingDevice) { device in
+                DeviceEditorView(existing: device)
+            }
+        } detail: {
+            EmptyStateView(title: "选择一个设备", systemImage: "rectangle.connected.to.line.below", message: "从左侧列表打开设备后台。")
+        }
+    }
+
+    private func add(_ service: DiscoveredService) {
+        let device = BarrierDevice(
+            name: service.name,
+            brandID: "custom",
+            host: service.name.replacingOccurrences(of: " ", with: "-") + ".local",
+            port: service.port,
+            scheme: service.scheme,
+            path: "/",
+            note: "来自 Bonjour/mDNS 发现：\(service.endpointDescription)"
+        )
+        store.add(device, credential: nil)
+    }
+
+    private func check(_ device: BarrierDevice) {
+        checkingIDs.insert(device.id)
+        Task {
+            let online = await ConnectivityChecker.check(host: device.host, port: device.port)
+            await MainActor.run {
+                store.mark(device.id, online: online)
+                checkingIDs.remove(device.id)
+            }
+        }
+    }
+}
+
+struct EmptyStateView: View {
+    let title: String
+    let systemImage: String
+    let message: String
+
+    var body: some View {
+        VStack(spacing: 10) {
+            Image(systemName: systemImage)
+                .font(.system(size: 42))
+                .foregroundStyle(.secondary)
+            Text(title)
+                .font(.headline)
+            Text(message)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity, minHeight: 120)
+        .padding()
+    }
+}
+
+struct DeviceRow: View {
+    let device: BarrierDevice
+    let isChecking: Bool
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: statusIcon)
+                .foregroundStyle(statusColor)
+                .frame(width: 22)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(device.name)
+                    .font(.headline)
+                Text("\(device.brand.name) · \(device.host):\(device.port)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var statusIcon: String {
+        if isChecking { return "clock.arrow.circlepath" }
+        switch device.isOnline {
+        case true: return "checkmark.circle.fill"
+        case false: return "xmark.circle.fill"
+        case nil: return "questionmark.circle"
+        }
+    }
+
+    private var statusColor: Color {
+        if isChecking { return .blue }
+        switch device.isOnline {
+        case true: return .green
+        case false: return .red
+        case nil: return .secondary
+        }
+    }
+}
+
+struct DeviceDetailView: View {
+    @EnvironmentObject private var store: DeviceStore
+    let device: BarrierDevice
+    let isChecking: Bool
+    let onCheck: () -> Void
+
+    @State private var showingCredential = false
+
+    var body: some View {
+        List {
+            Section("后台") {
+                LabeledContent("品牌", value: device.brand.name)
+                LabeledContent("地址", value: device.displayAddress)
+                if let lastCheckedAt = device.lastCheckedAt {
+                    LabeledContent("上次检测", value: lastCheckedAt.formatted(date: .abbreviated, time: .shortened))
+                }
+                Button {
+                    onCheck()
+                } label: {
+                    Label(isChecking ? "检测中" : "检测在线状态", systemImage: "network")
+                }
+                .disabled(isChecking)
+                NavigationLink {
+                    WebAdminView(device: device)
+                } label: {
+                    Label("打开后台", systemImage: "safari")
+                }
+            }
+
+            Section("授权凭据") {
+                if let credential = store.credential(for: device.id) {
+                    LabeledContent("账号", value: credential.username)
+                    Button {
+                        showingCredential.toggle()
+                    } label: {
+                        Label(showingCredential ? "隐藏密码" : "显示密码", systemImage: showingCredential ? "eye.slash" : "eye")
+                    }
+                    if showingCredential {
+                        Text(credential.password)
+                            .font(.system(.body, design: .monospaced))
+                    }
+                } else {
+                    Text("未保存账号")
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if !device.note.isEmpty {
+                Section("备注") {
+                    Text(device.note)
+                }
+            }
+        }
+        .navigationTitle(device.name)
+    }
+}
