@@ -14,6 +14,12 @@ struct ContentView: View {
             List {
                 Section {
                     Button {
+                        localNetworkProbe.request()
+                    } label: {
+                        Label("请求本地网络权限", systemImage: "lock.shield")
+                    }
+
+                    Button {
                         showingAdd = true
                     } label: {
                         Label("手动添加设备", systemImage: "plus.circle.fill")
