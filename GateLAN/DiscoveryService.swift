@@ -6,6 +6,7 @@ final class DiscoveryService: ObservableObject {
     @Published var services: [DiscoveredService] = []
     @Published var isScanning = false
     @Published var errorMessage: String?
+    @Published var statusText = "未发现"
 
     private var browsers: [NWBrowser] = []
 
@@ -14,6 +15,7 @@ final class DiscoveryService: ObservableObject {
         isScanning = true
         errorMessage = nil
         services = []
+        statusText = "正在发现 Bonjour/mDNS 服务..."
         browse(type: "_http._tcp", scheme: "http", fallbackPort: 80)
         browse(type: "_https._tcp", scheme: "https", fallbackPort: 443)
     }
@@ -22,6 +24,11 @@ final class DiscoveryService: ObservableObject {
         browsers.forEach { $0.cancel() }
         browsers = []
         isScanning = false
+        if services.isEmpty {
+            statusText = "已停止，未发现服务"
+        } else {
+            statusText = "已停止，发现 \(services.count) 个服务"
+        }
     }
 
     private func browse(type: String, scheme: String, fallbackPort: Int) {
@@ -34,9 +41,11 @@ final class DiscoveryService: ObservableObject {
                 switch state {
                 case .failed(let error):
                     self.errorMessage = error.localizedDescription
+                    self.statusText = "发现失败：\(error.localizedDescription)"
                     self.isScanning = false
                 case .ready:
                     self.isScanning = true
+                    self.statusText = "正在发现 Bonjour/mDNS 服务..."
                 case .cancelled:
                     self.isScanning = false
                 default:
@@ -72,6 +81,7 @@ final class DiscoveryService: ObservableObject {
             combined.append(service)
         }
         services = combined.sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
+        statusText = "发现 \(services.count) 个 Bonjour/mDNS 服务"
     }
 
     private static func serviceName(from endpoint: NWEndpoint) -> String {

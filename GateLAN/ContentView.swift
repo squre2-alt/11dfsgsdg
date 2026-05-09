@@ -4,11 +4,13 @@ struct ContentView: View {
     @EnvironmentObject private var store: DeviceStore
     @EnvironmentObject private var localNetworkProbe: LocalNetworkPermissionProbe
     @StateObject private var discovery = DiscoveryService()
+    @StateObject private var subnetScanner = SubnetScanner()
 
     @State private var showingAdd = false
     @State private var editingDevice: BarrierDevice?
     @State private var checkingIDs: Set<UUID> = []
     @State private var showingPermissionHint = false
+    @State private var subnetPrefix = "192.168.1"
 
     var body: some View {
         NavigationSplitView {
@@ -42,6 +44,57 @@ struct ContentView: View {
                         discovery.isScanning ? discovery.stop() : discovery.start()
                     } label: {
                         Label(discovery.isScanning ? "停止发现" : "发现局域网服务", systemImage: "dot.radiowaves.left.and.right")
+                    }
+
+                    HStack {
+                        Text(discovery.statusText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        if discovery.isScanning {
+                            Spacer()
+                            ProgressView()
+                        }
+                    }
+                    if let error = discovery.errorMessage {
+                        Text(error)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
+                }
+
+                Section("IP 网段扫描") {
+                    TextField("网段，例如 192.168.1", text: $subnetPrefix)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .keyboardType(.numbersAndPunctuation)
+
+                    Button {
+                        subnetScanner.isScanning ? subnetScanner.stop() : subnetScanner.scan(prefix: subnetPrefix)
+                    } label: {
+                        Label(subnetScanner.isScanning ? "停止扫描" : "扫描常见后台端口", systemImage: "network")
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        if subnetScanner.isScanning {
+                            ProgressView(value: Double(subnetScanner.scannedCount), total: 254)
+                        }
+                        Text(subnetScanner.statusText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    ForEach(subnetScanner.results) { result in
+                        Button {
+                            add(result)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(result.host)
+                                    .font(.headline)
+                                Text("开放端口：\(result.openPorts.map(String.init).joined(separator: ", "))")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                     }
                 }
 
@@ -125,6 +178,20 @@ struct ContentView: View {
             scheme: service.scheme,
             path: "/",
             note: "来自 Bonjour/mDNS 发现：\(service.endpointDescription)"
+        )
+        store.add(device, credential: nil)
+    }
+
+    private func add(_ result: SubnetScanResult) {
+        let preferredPort = result.openPorts.first ?? 80
+        let device = BarrierDevice(
+            name: "局域网设备 \(result.host)",
+            brandID: "custom",
+            host: result.host,
+            port: preferredPort,
+            scheme: preferredPort == 443 ? "https" : "http",
+            path: "/",
+            note: "来自 IP 网段扫描，开放端口：\(result.openPorts.map(String.init).joined(separator: ", "))"
         )
         store.add(device, credential: nil)
     }
