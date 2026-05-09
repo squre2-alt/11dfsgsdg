@@ -11,6 +11,7 @@ struct ContentView: View {
     @State private var checkingIDs: Set<UUID> = []
     @State private var showingPermissionHint = false
     @State private var subnetPrefix = "192.168.1"
+    @State private var detectedSubnetText = "尚未识别当前 Wi-Fi 网段"
 
     var body: some View {
         NavigationSplitView {
@@ -67,6 +68,16 @@ struct ContentView: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .keyboardType(.numbersAndPunctuation)
+
+                    Button {
+                        detectSubnet()
+                    } label: {
+                        Label("使用当前 Wi-Fi 网段", systemImage: "wifi")
+                    }
+
+                    Text(detectedSubnetText)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
 
                     Button {
                         subnetScanner.isScanning ? subnetScanner.stop() : subnetScanner.scan(prefix: subnetPrefix)
@@ -158,6 +169,7 @@ struct ContentView: View {
             }
             .onAppear {
                 localNetworkProbe.request()
+                detectSubnet()
             }
             .alert("已请求本地网络权限", isPresented: $showingPermissionHint) {
                 Button("知道了", role: .cancel) { }
@@ -194,6 +206,15 @@ struct ContentView: View {
             note: "来自 IP 网段扫描，开放端口：\(result.openPorts.map(String.init).joined(separator: ", "))"
         )
         store.add(device, credential: nil)
+    }
+
+    private func detectSubnet() {
+        if let prefix = NetworkInfo.currentIPv4Prefix() {
+            subnetPrefix = prefix
+            detectedSubnetText = "当前 Wi-Fi 网段：\(prefix).1-254"
+        } else {
+            detectedSubnetText = "未识别到 Wi-Fi IPv4 地址，可手动填写前三段 IP"
+        }
     }
 
     private func check(_ device: BarrierDevice) {

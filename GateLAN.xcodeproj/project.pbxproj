@@ -19,6 +19,7 @@
 		111111111111111111111110 /* BrandCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111111111111111111111010 /* BrandCatalog.swift */; };
 		111111111111111111111111 /* LocalNetworkPermissionProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111111111111111111111012 /* LocalNetworkPermissionProbe.swift */; };
 		111111111111111111111112 /* SubnetScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111111111111111111111014 /* SubnetScanner.swift */; };
+		111111111111111111111113 /* NetworkInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111111111111111111111015 /* NetworkInfo.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +38,7 @@
 		111111111111111111111012 /* LocalNetworkPermissionProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNetworkPermissionProbe.swift; sourceTree = "<group>"; };
 		111111111111111111111013 /* GateLAN.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GateLAN.entitlements; sourceTree = "<group>"; };
 		111111111111111111111014 /* SubnetScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubnetScanner.swift; sourceTree = "<group>"; };
+		111111111111111111111015 /* NetworkInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkInfo.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -73,6 +75,7 @@
 				111111111111111111111007 /* ConnectivityChecker.swift */,
 				111111111111111111111012 /* LocalNetworkPermissionProbe.swift */,
 				111111111111111111111014 /* SubnetScanner.swift */,
+				111111111111111111111015 /* NetworkInfo.swift */,
 				111111111111111111111013 /* GateLAN.entitlements */,
 				111111111111111111111011 /* Info.plist */,
 			);
@@ -167,6 +170,7 @@
 				111111111111111111111110 /* BrandCatalog.swift in Sources */,
 				111111111111111111111111 /* LocalNetworkPermissionProbe.swift in Sources */,
 				111111111111111111111112 /* SubnetScanner.swift in Sources */,
+				111111111111111111111113 /* NetworkInfo.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
